@@ -286,7 +286,9 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
               ? "One of the shares is not a valid amount."
               : unallocated === 0
                 ? "Fully allocated."
-                : `Unallocated: ${formatSatang(unallocated)}${unallocated < 0 ? " (over-allocated)" : ""}`}
+                : unallocated < 0
+                  ? `Over-allocated by ${formatSatang(-unallocated)}`
+                  : `Unallocated: ${formatSatang(unallocated)}`}
         </p>
       )}
 

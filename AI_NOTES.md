@@ -57,7 +57,16 @@
    a control-character check, and a `newId()` helper that falls back to `getRandomValues`. A
    defensive guard against out-of-order responses when switching users quickly was also added and
    checked with randomly delayed API responses.
-6. **A large shell heredoc silently half-applied.** The model wrote seven source files in one
+6. **Amount input read `0,5` as 5.00.** Found by clicking through the app in real Google Chrome
+   (exploratory script, headed browser) with awkward inputs. The frontend stripped every comma
+   before parsing, so a user typing a European decimal comma got an amount 10x too large and no
+   warning. The same pass found that typing `1000.` flashed an error mid-keystroke and that a
+   120-character unbroken description overflowed the delete dialog. *Corrected* with failing
+   vitest cases first: commas are accepted only as proper thousands groups, a trailing or leading
+   dot is accepted, and the dialog and toast wrap long text. Chrome was also used to simulate a
+   lost response (server saved the expense, browser saw a network error, user pressed the button
+   again) and confirmed exactly one expense results.
+7. **A large shell heredoc silently half-applied.** The model wrote seven source files in one
    shell command; the shell failed to parse it and only some files existed afterwards. *Detected*
    with `ls` and `wc -l`, which showed missing and present files that did not match what was
    reported. *Corrected* by recreating the missing files individually and confirming each existed

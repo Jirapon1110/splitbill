@@ -74,6 +74,28 @@ describe("parseAmount", () => {
   });
 });
 
+describe("parseAmount while typing and with separators", () => {
+  it("accepts a trailing or leading decimal point", () => {
+    expect(satang("1000.")).toBe(100000);
+    expect(satang(".5")).toBe(50);
+  });
+
+  it("only accepts commas as proper thousands separators", () => {
+    expect(satang("1,000")).toBe(100000);
+    expect(satang("12,345,678.9")).toBe(1234567890);
+    // "0,5" is a European decimal comma; silently reading it as 5.00 would be 10x wrong.
+    expect(parseAmount("0,5")).toEqual({ ok: false, reason: "invalid" });
+    expect(parseAmount("1,00")).toEqual({ ok: false, reason: "invalid" });
+    expect(parseAmount("1,0000")).toEqual({ ok: false, reason: "invalid" });
+    expect(parseAmount(",100")).toEqual({ ok: false, reason: "invalid" });
+  });
+
+  it("rejects a lone dot and non-ASCII digits", () => {
+    expect(parseAmount(".")).toEqual({ ok: false, reason: "invalid" });
+    expect(parseAmount("１２３")).toEqual({ ok: false, reason: "invalid" });
+  });
+});
+
 describe("API string conversion", () => {
   it("round-trips balances including negatives", () => {
     expect(fromApiString("-333.33")).toBe(-33333);

@@ -10,17 +10,21 @@ export type ParseResult =
   | { ok: true; satang: Satang }
   | { ok: false; reason: "empty" | "invalid" | "too_many_decimals" | "not_positive" | "too_large" };
 
-const AMOUNT_RE = /^\d+(\.\d+)?$/;
+// Digits with optional thousands commas (only proper groups of three), then an optional
+// fraction. A trailing or leading "." is allowed so typing "1000." does not flash an error.
+// "[0-9]" rather than "\d" keeps non-ASCII digits out. "0,5" is rejected on purpose:
+// reading a European decimal comma as a thousands separator would be 10x wrong.
+const AMOUNT_RE = /^(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)?(?:\.[0-9]*)?$/;
 const MAX_SATANG = 999_999_999_999; // NUMERIC(12,2) maximum, 9,999,999,999.99
 
 export function parseAmount(raw: string): ParseResult {
-  const text = raw.trim().replace(/,/g, "");
-  if (text === "") return { ok: false, reason: "empty" };
-  if (text.startsWith("-")) return { ok: false, reason: "not_positive" };
-  if (!AMOUNT_RE.test(text)) return { ok: false, reason: "invalid" };
-  const [whole, fraction = ""] = text.split(".");
+  const trimmed = raw.trim();
+  if (trimmed === "") return { ok: false, reason: "empty" };
+  if (trimmed.startsWith("-")) return { ok: false, reason: "not_positive" };
+  if (!AMOUNT_RE.test(trimmed) || !/[0-9]/.test(trimmed)) return { ok: false, reason: "invalid" };
+  const [whole, fraction = ""] = trimmed.replace(/,/g, "").split(".");
   if (fraction.length > 2) return { ok: false, reason: "too_many_decimals" };
-  const satang = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+  const satang = Number(whole || "0") * 100 + Number(fraction.padEnd(2, "0"));
   if (satang <= 0) return { ok: false, reason: "not_positive" };
   if (satang > MAX_SATANG) return { ok: false, reason: "too_large" };
   return { ok: true, satang };

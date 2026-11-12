@@ -72,7 +72,7 @@ export default function ConfirmDialog({
         <h2 id="confirm-title" className="text-xl font-semibold tracking-tight">
           {title}
         </h2>
-        <div id="confirm-body" className="mt-2 text-body">
+        <div id="confirm-body" className="mt-2 text-body [overflow-wrap:anywhere]">
           {children}
         </div>
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

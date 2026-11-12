@@ -21,7 +21,7 @@ export default function Toast({ toast, onClose }: { toast: ToastData | null; onC
       <div
         key={toast.id}
         role="status"
-        className="pointer-events-auto flex animate-fade-up items-center gap-3 rounded-full bg-ink py-3 pl-4 pr-5 text-sm font-medium text-white shadow-pop"
+        className="pointer-events-auto flex max-w-full animate-fade-up items-center gap-3 [overflow-wrap:anywhere] rounded-full bg-ink py-3 pl-4 pr-5 text-sm font-medium text-white shadow-pop"
       >
         <svg
           aria-hidden
