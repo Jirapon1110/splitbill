@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { newId } from "@/lib/id";
 import { titleCase } from "@/lib/ui";
 import Avatar from "./Avatar";
 import Select from "./Select";
@@ -33,7 +34,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // One key per logical submission: a retry after a network failure cannot create a duplicate.
-  const idempotencyKey = useRef(crypto.randomUUID());
+  const idempotencyKey = useRef(newId());
   const descriptionInput = useRef<HTMLInputElement>(null);
 
   const parsed = parseAmount(amount);
@@ -65,9 +66,9 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
 
   const amountProblem = (() => {
     if (amount.trim() === "" || parsed.ok) return null;
-    return parsed.reason === "too_many_decimals"
-      ? "Amounts can have at most 2 decimal places."
-      : "Enter an amount greater than zero, such as 1,000.00.";
+    if (parsed.reason === "too_many_decimals") return "Amounts can have at most 2 decimal places.";
+    if (parsed.reason === "too_large") return "That amount is too large.";
+    return "Enter an amount greater than zero, such as 1,000.00.";
   })();
 
   // The backend rejects equal splits that would give a member less than 0.01.
@@ -127,7 +128,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
         { description: description.trim(), paid_by: payer, amount: toApiString(total), split },
         idempotencyKey.current,
       );
-      idempotencyKey.current = crypto.randomUUID();
+      idempotencyKey.current = newId();
       setDescription("");
       setAmount("");
       setExact({});
@@ -151,6 +152,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
         <input
           ref={descriptionInput}
           className="field"
+          maxLength={200}
           placeholder="Dinner at the night market"
           value={description}
           onChange={(e) => setDescription(e.target.value)}

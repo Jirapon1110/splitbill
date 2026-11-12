@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   api,
   friendlyError,
@@ -49,6 +49,10 @@ export default function SplitBillApp() {
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState<ToastData | null>(null);
 
+  // Only the most recent refresh may update state, so a slow response for a previous user or
+  // group can never overwrite the current one.
+  const latestRefresh = useRef(0);
+
   const notify = (message: string) => setToast({ id: Date.now(), message });
   const closeToast = useCallback(() => setToast(null), []);
   const cancelDelete = useCallback(() => setPendingDelete(null), []);
@@ -83,17 +87,19 @@ export default function SplitBillApp() {
 
   const refresh = useCallback(async () => {
     if (groupId === null || groupsOwner !== user) return;
+    const stamp = ++latestRefresh.current;
     try {
       const [detail, list, bal] = await Promise.all([
         api.group(user, groupId),
         api.expenses(user, groupId),
         api.balances(user, groupId),
       ]);
+      if (stamp !== latestRefresh.current) return;
       setGroup(detail);
       setExpenses(list);
       setBalances(bal);
     } catch (e) {
-      setError(friendlyError(e));
+      if (stamp === latestRefresh.current) setError(friendlyError(e));
     }
   }, [user, groupId, groupsOwner]);
 
@@ -101,6 +107,7 @@ export default function SplitBillApp() {
     setGroup(null);
     setExpenses([]);
     setBalances(null);
+    setError(null);
     void refresh();
   }, [refresh]);
 
