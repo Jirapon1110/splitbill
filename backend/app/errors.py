@@ -3,6 +3,8 @@
 Every error response looks like: {"error": {"code": "...", "message": "..."}}
 """
 
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -53,6 +55,14 @@ def register_error_handlers(app: FastAPI) -> None:
         field = ".".join(str(p) for p in first["loc"] if p != "body")
         message = f"{field}: {first['msg']}" if field else first["msg"]
         return JSONResponse(status_code=422, content=_body("validation_error", message))
+
+    @app.exception_handler(Exception)
+    async def unexpected(_: Request, exc: Exception):
+        # Never leak internals; the traceback is still logged by the server.
+        logging.getLogger("uvicorn.error").error("Unhandled error", exc_info=exc)
+        return JSONResponse(
+            status_code=500, content=_body("internal_error", "Internal server error")
+        )
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(_: Request, exc: StarletteHTTPException):

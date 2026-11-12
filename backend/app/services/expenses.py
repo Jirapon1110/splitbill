@@ -30,6 +30,11 @@ def _resolve_shares(
             raise ValidationFailed("split.members must not contain duplicates")
         _require_members(names, members)
         allocated = split_equally(amount, names)
+        if min(allocated.values()) <= 0:
+            raise ValidationFailed(
+                f"The amount {amount} is too small to split among {len(names)} members: "
+                "every share must be at least 0.01"
+            )
     else:
         assert isinstance(split, ExactSplit)
         names = [name.strip().lower() for name in split.shares]

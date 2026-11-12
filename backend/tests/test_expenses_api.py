@@ -236,3 +236,28 @@ def test_blank_description_is_rejected(client):
         "/groups/1/expenses", headers=ALICE, json=alice_dinner(description="   ")
     )
     assert response.status_code == 422
+
+
+def test_equal_split_too_small_for_each_member_is_rejected_cleanly(client):
+    response = client.post("/groups/1/expenses", headers=ALICE, json=alice_dinner(amount="0.02"))
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+    assert "0.01" in response.json()["error"]["message"]
+    assert client.get("/groups/1/expenses", headers=ALICE).json() == []
+
+
+def test_unexpected_errors_still_return_the_json_error_shape(client):
+    from app.main import create_app
+
+    app = create_app()
+
+    @app.get("/boom")
+    def boom():
+        raise RuntimeError("unexpected")
+
+    with TestClient(app, raise_server_exceptions=False) as local:
+        response = local.get("/boom")
+    assert response.status_code == 500
+    assert response.json() == {
+        "error": {"code": "internal_error", "message": "Internal server error"}
+    }
