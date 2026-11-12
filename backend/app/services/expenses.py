@@ -59,6 +59,9 @@ def create_expense(
         if existing is not None:
             return existing, False
 
+    description = data.description.strip()
+    if not description:
+        raise ValidationFailed("description must not be blank")
     members = {member.username: member for member in group.members}
     amount = parse_amount(data.amount)
     payer_name = data.paid_by.strip().lower()
@@ -70,7 +73,7 @@ def create_expense(
         expense = repo.add_expense(
             session,
             group_id=group.id,
-            description=data.description.strip(),
+            description=description,
             payer=members[payer_name],
             amount=amount,
             idempotency_key=idempotency_key or None,

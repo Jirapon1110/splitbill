@@ -229,3 +229,10 @@ def test_groups_listing_and_auth(client):
     assert client.get("/groups/99", headers=ALICE).status_code == 404
     detail = client.get("/groups/1", headers=ALICE).json()
     assert [m["username"] for m in detail["members"]] == ["alice", "bob", "carol"]
+
+
+def test_blank_description_is_rejected(client):
+    response = client.post(
+        "/groups/1/expenses", headers=ALICE, json=alice_dinner(description="   ")
+    )
+    assert response.status_code == 422

@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from app.errors import ValidationFailed
 
-_AMOUNT_RE = re.compile(r"^\d+(\.\d+)?$")
+_AMOUNT_RE = re.compile(r"^[0-9]+(\.[0-9]+)?$")  # ASCII only: \d also matches other scripts
 MAX_AMOUNT = Decimal("9999999999.99")  # NUMERIC(12,2)
 SATANG = Decimal("0.01")
 

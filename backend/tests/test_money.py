@@ -17,7 +17,9 @@ def test_equal_split_two_leftover_satang():
     assert list(shares.values()) == [Decimal("0.02"), Decimal("0.02"), Decimal("0.01")]
 
 
-@pytest.mark.parametrize("raw", ["10.005", "0", "0.00", "-5.00", "abc", "", "1e3", "NaN", "1,000"])
+@pytest.mark.parametrize(
+    "raw", ["10.005", "0", "0.00", "-5.00", "abc", "", "1e3", "NaN", "1,000", "٣.00"]
+)
 def test_parse_amount_rejects_invalid(raw):
     with pytest.raises(ValidationFailed):
         parse_amount(raw)
