@@ -66,12 +66,19 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
       : "Enter an amount greater than zero, such as 1,000.00.";
   })();
 
+  // The backend rejects equal splits that would give a member less than 0.01.
+  const tooSmall =
+    splitType === "equal" &&
+    total !== null &&
+    preview.entries.length > 0 &&
+    preview.entries.some((e) => e.share === 0);
+
   const canSubmit =
     !submitting &&
     description.trim() !== "" &&
     total !== null &&
     (splitType === "equal"
-      ? selected.length > 0
+      ? selected.length > 0 && !tooSmall
       : !preview.invalid && unallocated === 0 && preview.entries.some((e) => e.share));
 
   function toggleMember(name: string) {
@@ -204,6 +211,13 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
               </div>
             ))}
       </div>
+
+      {tooSmall && (
+        <p className="text-sm text-red-600" role="status">
+          This amount is too small to split among {preview.entries.length} members (each share must
+          be at least 0.01).
+        </p>
+      )}
 
       {splitType === "exact" && (
         <p
