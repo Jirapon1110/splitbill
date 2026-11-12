@@ -46,7 +46,18 @@
    silently did not exist. *Detected* by Playwright checks (overlay hit-test, console errors,
    screenshots). *Corrected* by moving the dialog and toast outside `<main>`, tracking which user
    the loaded groups belong to, and adding `lib/` to Tailwind's `content` paths.
-5. **A large shell heredoc silently half-applied.** The model wrote seven source files in one
+5. **Four more 500s from untrusted input, plus an insecure-context crash.** A second probe with
+   hostile values found API requests that reached the database layer and failed there: ids above
+   the PostgreSQL `INTEGER` range, an `Idempotency-Key` longer than its 200-char column, and a NUL
+   character in the description. Separately, the frontend called `crypto.randomUUID()`, which does
+   not exist on plain-http origins such as the LAN URL Next prints, so the form would throw there.
+   *Detected* by probing with out-of-range and malformed values and by checking
+   `window.isSecureContext` / `typeof crypto.randomUUID` on the LAN URL in a real browser.
+   *Corrected* with failing tests first (3 backend tests, 2 frontend tests), path/header bounds and
+   a control-character check, and a `newId()` helper that falls back to `getRandomValues`. A
+   defensive guard against out-of-order responses when switching users quickly was also added and
+   checked with randomly delayed API responses.
+6. **A large shell heredoc silently half-applied.** The model wrote seven source files in one
    shell command; the shell failed to parse it and only some files existed afterwards. *Detected*
    with `ls` and `wc -l`, which showed missing and present files that did not match what was
    reported. *Corrected* by recreating the missing files individually and confirming each existed
