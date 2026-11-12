@@ -18,7 +18,7 @@ export default function ExpenseList({ expenses, user, onDelete }: Props) {
       )}
       <ul className="divide-y divide-sage">
         {expenses.map((expense) => (
-          <li key={expense.id} className="py-4 first:pt-0 last:pb-0">
+          <li key={expense.id} className="animate-fade-up py-4 first:pt-0 last:pb-0">
             <div className="flex items-baseline justify-between gap-4">
               <span className="font-semibold">{expense.description}</span>
               <span className="text-lg font-bold tabular-nums">
@@ -40,7 +40,7 @@ export default function ExpenseList({ expenses, user, onDelete }: Props) {
             </div>
             {expense.paid_by === user && (
               <button
-                className="mt-2 text-sm font-semibold text-negative underline-offset-2 hover:underline"
+                className="-ml-3 mt-2 rounded-full px-3 py-1 text-sm font-semibold text-negative transition hover:bg-negative-pale active:scale-95"
                 onClick={() => onDelete(expense)}
               >
                 Delete

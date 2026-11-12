@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import Select from "./Select";
 import { api, friendlyError, type ExpensePayload, type GroupDetail } from "@/lib/api";
 import {
   formatSatang,
@@ -123,7 +124,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
   const exactOk = unallocated === 0 && !preview.invalid;
 
   return (
-    <form onSubmit={submit} className="card space-y-5" aria-label="Add expense">
+    <form onSubmit={submit} className="card relative z-20 space-y-5" aria-label="Add expense">
       <h2 className="text-xl font-semibold tracking-tight">Add expense</h2>
 
       <label className="block">
@@ -149,24 +150,25 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
           />
           {amountProblem && <span className="mt-1 block text-sm text-negative">{amountProblem}</span>}
         </label>
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-body">Paid by</span>
-          <select className="field capitalize" value={payer} onChange={(e) => setPayer(e.target.value)}>
-            {usernames.map((name) => (
-              <option key={name}>{name}</option>
-            ))}
-          </select>
-        </label>
+        <Select
+          label="Paid by"
+          value={payer}
+          onChange={setPayer}
+          options={usernames.map((name) => ({
+            value: name,
+            label: name.charAt(0).toUpperCase() + name.slice(1),
+          }))}
+        />
       </div>
 
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-body">Split</legend>
-        <div className="inline-flex rounded-full bg-sage p-1" role="radiogroup">
+        <div className="inline-flex h-12 items-center rounded-full bg-sage p-1" role="radiogroup">
           {(["equal", "exact"] as const).map((type) => (
             <label
               key={type}
-              className={`cursor-pointer rounded-full px-5 py-2 text-sm font-semibold transition ${
-                splitType === type ? "bg-ink text-lime" : "text-body hover:text-ink"
+              className={`flex h-10 cursor-pointer items-center rounded-full px-5 text-sm font-semibold transition-all duration-200 active:scale-95 ${
+                splitType === type ? "bg-ink text-lime shadow-card" : "text-body hover:text-ink"
               }`}
             >
               <input
@@ -208,7 +210,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
               <div key={name} className="flex items-center justify-between gap-4">
                 <span className="font-medium capitalize">{name}</span>
                 <input
-                  className="field !w-36 !py-2 text-right tabular-nums"
+                  className="field field-sm"
                   inputMode="decimal"
                   placeholder="0.00"
                   aria-label={`Share for ${name}`}
@@ -228,7 +230,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
 
       {splitType === "exact" && (
         <p
-          className={`inline-block rounded-full px-4 py-1 text-sm font-semibold ${
+          className={`block w-fit rounded-full px-4 py-1.5 text-sm font-semibold transition-colors duration-200 ${
             exactOk ? "bg-lime-pale text-positive" : "bg-negative-pale text-negative"
           }`}
           role="status"
@@ -245,7 +247,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
 
       {error && (
         <p
-          className="rounded-2xl border border-negative/30 bg-negative-pale px-4 py-3 text-sm font-medium text-negative"
+          className="animate-shake rounded-2xl border border-negative/30 bg-negative-pale px-4 py-3 text-sm font-medium text-negative"
           role="alert"
         >
           {error}

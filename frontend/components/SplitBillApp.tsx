@@ -12,8 +12,11 @@ import {
 import Balances from "./Balances";
 import ExpenseForm from "./ExpenseForm";
 import ExpenseList from "./ExpenseList";
+import Select from "./Select";
 
 const USERS = ["alice", "bob", "carol", "dan"];
+
+const titleCase = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
 
 export default function SplitBillApp() {
   const [user, setUser] = useState(USERS[0]);
@@ -85,39 +88,27 @@ export default function SplitBillApp() {
         <p className="text-body">Share costs with your group and see who owes whom.</p>
       </header>
 
-      <div className="card grid gap-4 sm:grid-cols-2">
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-body">Signed in as</span>
-          <select
-            className="field capitalize"
-            value={user}
-            onChange={(e) => setUser(e.target.value)}
-          >
-            {USERS.map((name) => (
-              <option key={name}>{name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-body">Group</span>
-          <select
-            className="field"
-            value={groupId ?? ""}
-            onChange={(e) => setGroupId(Number(e.target.value))}
-            disabled={groups.length === 0}
-          >
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </label>
+      {/* z-30 keeps the open dropdown above the cards that follow (each animates in its own layer). */}
+      <div className="card relative z-30 grid gap-4 sm:grid-cols-2">
+        <Select
+          label="Signed in as"
+          value={user}
+          onChange={setUser}
+          options={USERS.map((name) => ({ value: name, label: titleCase(name) }))}
+        />
+        <Select
+          label="Group"
+          value={groupId === null ? "" : String(groupId)}
+          onChange={(value) => setGroupId(Number(value))}
+          disabled={groups.length === 0}
+          placeholder="No groups"
+          options={groups.map((g) => ({ value: String(g.id), label: g.name }))}
+        />
       </div>
 
       {error && (
         <p
-          className="rounded-2xl border border-negative/30 bg-negative-pale px-4 py-3 text-sm font-medium text-negative"
+          className="animate-fade-up rounded-2xl border border-negative/30 bg-negative-pale px-4 py-3 text-sm font-medium text-negative"
           role="alert"
         >
           {error}

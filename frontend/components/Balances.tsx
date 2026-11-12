@@ -31,7 +31,7 @@ export default function Balances({ data }: { data: BalancesData | null }) {
                 </p>
               </div>
               <span
-                className={`rounded-full px-3 py-1 text-sm font-semibold tabular-nums ${
+                className={`rounded-full px-3 py-1 text-sm font-semibold tabular-nums transition-colors duration-300 ${
                   owed
                     ? "bg-lime-pale text-positive"
                     : owes
