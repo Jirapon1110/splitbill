@@ -1,0 +1,31 @@
+# One command: docker compose up --build
+# Defaults below are for local development only; override via a root .env file.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: splitbill
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-splitbill}
+      POSTGRES_DB: splitbill
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U splitbill"]
+      interval: 3s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://splitbill:${POSTGRES_PASSWORD:-splitbill}@db:5432/splitbill
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
