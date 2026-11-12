@@ -261,3 +261,23 @@ def test_unexpected_errors_still_return_the_json_error_shape(client):
     assert response.json() == {
         "error": {"code": "internal_error", "message": "Internal server error"}
     }
+
+
+def test_out_of_range_ids_are_client_errors_not_500(client):
+    assert client.get("/groups/99999999999", headers=ALICE).status_code == 422
+    assert client.delete("/groups/1/expenses/99999999999", headers=ALICE).status_code == 422
+
+
+def test_overlong_idempotency_key_is_rejected(client):
+    headers = {**ALICE, "Idempotency-Key": "k" * 201}
+    response = client.post("/groups/1/expenses", headers=headers, json=alice_dinner())
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+
+
+def test_control_characters_in_description_are_rejected(client):
+    response = client.post(
+        "/groups/1/expenses", headers=ALICE, json=alice_dinner(description="a\u0000b")
+    )
+    assert response.status_code == 422
+    assert "invalid characters" in response.json()["error"]["message"]

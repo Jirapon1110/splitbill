@@ -1,6 +1,7 @@
 from decimal import Decimal
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Response, status
+from fastapi import APIRouter, Depends, Header, Path, Response, status
 from sqlalchemy.orm import Session
 
 from app.db import get_session
@@ -19,6 +20,11 @@ from app.services import expenses as expense_service
 from app.services import groups as group_service
 
 router = APIRouter()
+
+# PostgreSQL INTEGER range: larger ids cannot exist and would otherwise surface as a 500.
+MAX_ID = 2_147_483_647
+GroupId = Annotated[int, Path(ge=1, le=MAX_ID)]
+ExpenseId = Annotated[int, Path(ge=1, le=MAX_ID)]
 
 
 def get_current_user(
@@ -46,7 +52,9 @@ def list_groups(user: User = Depends(get_current_user), session: Session = Depen
 
 @router.get("/groups/{group_id}", response_model=GroupDetailOut)
 def get_group(
-    group_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)
+    group_id: GroupId,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
 ):
     group = group_service.get_group_for_member(session, user, group_id)
     return GroupDetailOut(
@@ -58,10 +66,10 @@ def get_group(
 
 @router.post("/groups/{group_id}/expenses", response_model=ExpenseOut, status_code=201)
 def create_expense(
-    group_id: int,
+    group_id: GroupId,
     data: ExpenseCreate,
     response: Response,
-    idempotency_key: str | None = Header(default=None),
+    idempotency_key: str | None = Header(default=None, max_length=200),
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
@@ -74,7 +82,9 @@ def create_expense(
 
 @router.get("/groups/{group_id}/expenses", response_model=list[ExpenseOut])
 def list_expenses(
-    group_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)
+    group_id: GroupId,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
 ):
     group = group_service.get_group_for_member(session, user, group_id)
     return [_expense_out(e) for e in expense_service.list_expenses(session, group)]
@@ -82,8 +92,8 @@ def list_expenses(
 
 @router.delete("/groups/{group_id}/expenses/{expense_id}", status_code=204)
 def delete_expense(
-    group_id: int,
-    expense_id: int,
+    group_id: GroupId,
+    expense_id: ExpenseId,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
@@ -94,7 +104,9 @@ def delete_expense(
 
 @router.get("/groups/{group_id}/balances", response_model=BalancesOut)
 def get_balances(
-    group_id: int, user: User = Depends(get_current_user), session: Session = Depends(get_session)
+    group_id: GroupId,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
 ):
     group = group_service.get_group_for_member(session, user, group_id)
     rows = expense_service.balances(session, group)

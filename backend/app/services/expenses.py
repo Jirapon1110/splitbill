@@ -67,6 +67,8 @@ def create_expense(
     description = data.description.strip()
     if not description:
         raise ValidationFailed("description must not be blank")
+    if any(ord(char) < 32 for char in description):
+        raise ValidationFailed("description contains invalid characters")
     members = {member.username: member for member in group.members}
     amount = parse_amount(data.amount)
     payer_name = data.paid_by.strip().lower()
