@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { titleCase } from "@/lib/ui";
+import Avatar from "./Avatar";
 import Select from "./Select";
 import { api, friendlyError, type ExpensePayload, type GroupDetail } from "@/lib/api";
 import {
@@ -32,6 +34,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   // One key per logical submission: a retry after a network failure cannot create a duplicate.
   const idempotencyKey = useRef(crypto.randomUUID());
+  const descriptionInput = useRef<HTMLInputElement>(null);
 
   const parsed = parseAmount(amount);
   const total: Satang | null = parsed.ok ? parsed.satang : null;
@@ -82,6 +85,21 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
       ? selected.length > 0 && !tooSmall
       : !preview.invalid && unallocated === 0 && preview.entries.some((e) => e.share));
 
+  // Tell the user why the button is disabled instead of leaving them guessing.
+  const blockedReason = (() => {
+    if (canSubmit || submitting) return null;
+    if (description.trim() === "") return "Add a description to continue.";
+    if (total === null) return "Enter an amount to continue.";
+    if (splitType === "equal") {
+      if (selected.length === 0) return "Select at least one member to split with.";
+      if (tooSmall) return "The amount is too small to split that many ways.";
+      return null;
+    }
+    if (preview.invalid) return "Fix the invalid share amount to continue.";
+    if (unallocated !== 0) return "Allocate the full amount to continue.";
+    return "Enter at least one share.";
+  })();
+
   function toggleMember(name: string) {
     setSelected((current) =>
       current.includes(name) ? current.filter((n) => n !== name) : [...current, name],
@@ -114,6 +132,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
       setAmount("");
       setExact({});
       onCreated();
+      descriptionInput.current?.focus();
     } catch (e) {
       setError(friendlyError(e));
     } finally {
@@ -130,6 +149,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-body">Description</span>
         <input
+          ref={descriptionInput}
           className="field"
           placeholder="Dinner at the night market"
           value={description}
@@ -146,6 +166,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
             placeholder="1,000.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
+            onBlur={() => parsed.ok && setAmount(formatSatang(parsed.satang))}
             aria-invalid={amountProblem !== null}
           />
           {amountProblem && <span className="mt-1 block text-sm text-negative">{amountProblem}</span>}
@@ -156,7 +177,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
           onChange={setPayer}
           options={usernames.map((name) => ({
             value: name,
-            label: name.charAt(0).toUpperCase() + name.slice(1),
+            label: titleCase(name),
           }))}
         />
       </div>
@@ -198,7 +219,8 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
                       checked={on}
                       onChange={() => toggleMember(name)}
                     />
-                    <span className={`font-medium capitalize ${on ? "" : "text-mute"}`}>{name}</span>
+                    <Avatar name={name} size="sm" />
+                    <span className={`font-medium ${on ? "" : "text-mute"}`}>{titleCase(name)}</span>
                   </label>
                   <span className="font-semibold tabular-nums">
                     {entry?.share != null ? formatSatang(entry.share) : "—"}
@@ -208,7 +230,10 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
             })
           : usernames.map((name) => (
               <div key={name} className="flex items-center justify-between gap-4">
-                <span className="font-medium capitalize">{name}</span>
+                <span className="flex items-center gap-3 font-medium">
+                  <Avatar name={name} size="sm" />
+                  {titleCase(name)}
+                </span>
                 <input
                   className="field field-sm"
                   inputMode="decimal"
@@ -226,6 +251,24 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
           This amount is too small to split among {preview.entries.length} members (each share must
           be at least 0.01).
         </p>
+      )}
+
+      {splitType === "exact" && total !== null && (
+        <div
+          className="h-2 overflow-hidden rounded-full bg-sage"
+          role="progressbar"
+          aria-label="Amount allocated"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.min(100, Math.round((allocated / total) * 100))}
+        >
+          <div
+            className={`h-full rounded-full transition-all duration-300 ${
+              allocated > total ? "bg-negative" : "bg-lime"
+            }`}
+            style={{ width: `${Math.min(100, (allocated / total) * 100)}%` }}
+          />
+        </div>
       )}
 
       {splitType === "exact" && (
@@ -254,9 +297,12 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
         </p>
       )}
 
-      <button type="submit" disabled={!canSubmit} className="btn-primary w-full sm:w-auto">
-        {submitting ? "Saving…" : "Add expense"}
-      </button>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        <button type="submit" disabled={!canSubmit} className="btn-primary w-full sm:w-auto">
+          {submitting ? "Saving…" : "Add expense"}
+        </button>
+        {blockedReason && <p className="text-sm text-mute">{blockedReason}</p>}
+      </div>
     </form>
   );
 }

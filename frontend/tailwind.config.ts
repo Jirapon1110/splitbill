@@ -10,6 +10,7 @@ export default {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./lib/**/*.{js,ts,jsx,tsx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
@@ -44,6 +45,7 @@ export default {
           from: { opacity: "0", transform: "translateY(-6px) scale(0.97)" },
           to: { opacity: "1", transform: "none" },
         },
+        "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
         shake: {
           "0%, 100%": { transform: "translateX(0)" },
           "25%": { transform: "translateX(-4px)" },
@@ -54,6 +56,7 @@ export default {
         "fade-up": "fade-up 320ms cubic-bezier(0.22, 1, 0.36, 1) both",
         pop: "pop 160ms cubic-bezier(0.22, 1, 0.36, 1) both",
         shake: "shake 260ms ease-in-out",
+        "fade-in": "fade-in 180ms ease-out both",
       },
     },
   },

@@ -37,7 +37,16 @@
    then a 422 with a clear message in the service, the same rule mirrored in the frontend preview
    (submit disabled with an explanation), and a catch-all handler so any unexpected error still
    returns `{"error": {...}}`.
-4. **A large shell heredoc silently half-applied.** The model wrote seven source files in one
+4. **Three UI defects that compiled, linted and type-checked cleanly.** Found only by driving the
+   real page in a browser while adding a delete-confirmation dialog, toasts and coloured avatars:
+   (a) the dialog's `fixed inset-0` overlay sat inside `<main className="space-y-5">`, whose sibling
+   margin pushed it down 20px, so clicking the top strip did not dismiss it; (b) switching user
+   re-fetched the *previous* user's group id, producing six 403 responses in the console; (c) the
+   avatar colour classes lived in `lib/ui.ts`, a folder Tailwind was not scanning, so the colours
+   silently did not exist. *Detected* by Playwright checks (overlay hit-test, console errors,
+   screenshots). *Corrected* by moving the dialog and toast outside `<main>`, tracking which user
+   the loaded groups belong to, and adding `lib/` to Tailwind's `content` paths.
+5. **A large shell heredoc silently half-applied.** The model wrote seven source files in one
    shell command; the shell failed to parse it and only some files existed afterwards. *Detected*
    with `ls` and `wc -l`, which showed missing and present files that did not match what was
    reported. *Corrected* by recreating the missing files individually and confirming each existed
