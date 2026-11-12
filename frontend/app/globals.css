@@ -2,20 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: #0e0f0c;
+  background: #f4f6f2;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-xl border border-ink/20 bg-white px-4 py-3 text-ink outline-none transition;
+    @apply placeholder:text-mute/70 focus:border-ink focus:ring-4 focus:ring-lime/60;
+  }
+  .btn-primary {
+    @apply rounded-full bg-lime px-6 py-3 font-semibold text-ink transition;
+    @apply hover:bg-lime-pale active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
+    @apply focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60;
+  }
+  .card {
+    @apply rounded-card bg-white p-6 shadow-card;
+  }
 }

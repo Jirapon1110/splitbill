@@ -120,39 +120,38 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
     }
   }
 
+  const exactOk = unallocated === 0 && !preview.invalid;
+
   return (
-    <form onSubmit={submit} className="space-y-4 rounded border p-4" aria-label="Add expense">
-      <h2 className="text-lg font-semibold">Add expense</h2>
+    <form onSubmit={submit} className="card space-y-5" aria-label="Add expense">
+      <h2 className="text-xl font-semibold tracking-tight">Add expense</h2>
 
       <label className="block">
-        <span className="text-sm">Description</span>
+        <span className="mb-1 block text-sm font-medium text-body">Description</span>
         <input
-          className="mt-1 w-full rounded border p-2"
+          className="field"
+          placeholder="Dinner at the night market"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="text-sm">Amount (THB)</span>
+          <span className="mb-1 block text-sm font-medium text-body">Amount (THB)</span>
           <input
-            className="mt-1 w-full rounded border p-2"
+            className="field text-lg font-semibold tabular-nums"
             inputMode="decimal"
             placeholder="1,000.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             aria-invalid={amountProblem !== null}
           />
-          {amountProblem && <span className="text-sm text-red-600">{amountProblem}</span>}
+          {amountProblem && <span className="mt-1 block text-sm text-negative">{amountProblem}</span>}
         </label>
         <label className="block">
-          <span className="text-sm">Paid by</span>
-          <select
-            className="mt-1 w-full rounded border p-2"
-            value={payer}
-            onChange={(e) => setPayer(e.target.value)}
-          >
+          <span className="mb-1 block text-sm font-medium text-body">Paid by</span>
+          <select className="field capitalize" value={payer} onChange={(e) => setPayer(e.target.value)}>
             {usernames.map((name) => (
               <option key={name}>{name}</option>
             ))}
@@ -161,13 +160,19 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
       </div>
 
       <fieldset>
-        <legend className="text-sm">Split</legend>
-        <div className="mt-1 flex gap-4">
+        <legend className="mb-2 text-sm font-medium text-body">Split</legend>
+        <div className="inline-flex rounded-full bg-sage p-1" role="radiogroup">
           {(["equal", "exact"] as const).map((type) => (
-            <label key={type} className="flex items-center gap-1">
+            <label
+              key={type}
+              className={`cursor-pointer rounded-full px-5 py-2 text-sm font-semibold transition ${
+                splitType === type ? "bg-ink text-lime" : "text-body hover:text-ink"
+              }`}
+            >
               <input
                 type="radio"
                 name="split-type"
+                className="sr-only"
                 checked={splitType === type}
                 onChange={() => setSplitType(type)}
               />
@@ -177,21 +182,23 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
         </div>
       </fieldset>
 
-      <div className="space-y-2" aria-label="Split preview">
+      <div className="space-y-2 rounded-2xl bg-canvas p-4" aria-label="Split preview">
         {splitType === "equal"
           ? usernames.map((name) => {
               const entry = preview.entries.find((e) => e.name === name);
+              const on = selected.includes(name);
               return (
                 <div key={name} className="flex items-center justify-between">
-                  <label className="flex items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-3">
                     <input
                       type="checkbox"
-                      checked={selected.includes(name)}
+                      className="h-5 w-5 accent-[#163300]"
+                      checked={on}
                       onChange={() => toggleMember(name)}
                     />
-                    {name}
+                    <span className={`font-medium capitalize ${on ? "" : "text-mute"}`}>{name}</span>
                   </label>
-                  <span className="tabular-nums">
+                  <span className="font-semibold tabular-nums">
                     {entry?.share != null ? formatSatang(entry.share) : "—"}
                   </span>
                 </div>
@@ -199,9 +206,9 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
             })
           : usernames.map((name) => (
               <div key={name} className="flex items-center justify-between gap-4">
-                <span>{name}</span>
+                <span className="font-medium capitalize">{name}</span>
                 <input
-                  className="w-32 rounded border p-1 text-right tabular-nums"
+                  className="field !w-36 !py-2 text-right tabular-nums"
                   inputMode="decimal"
                   placeholder="0.00"
                   aria-label={`Share for ${name}`}
@@ -213,7 +220,7 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
       </div>
 
       {tooSmall && (
-        <p className="text-sm text-red-600" role="status">
+        <p className="text-sm font-medium text-negative" role="status">
           This amount is too small to split among {preview.entries.length} members (each share must
           be at least 0.01).
         </p>
@@ -221,7 +228,9 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
 
       {splitType === "exact" && (
         <p
-          className={`text-sm ${unallocated === 0 ? "text-green-700" : "text-red-600"}`}
+          className={`inline-block rounded-full px-4 py-1 text-sm font-semibold ${
+            exactOk ? "bg-lime-pale text-positive" : "bg-negative-pale text-negative"
+          }`}
           role="status"
         >
           {unallocated === null
@@ -235,16 +244,15 @@ export default function ExpenseForm({ user, group, onCreated }: Props) {
       )}
 
       {error && (
-        <p className="rounded bg-red-50 p-2 text-sm text-red-700" role="alert">
+        <p
+          className="rounded-2xl border border-negative/30 bg-negative-pale px-4 py-3 text-sm font-medium text-negative"
+          role="alert"
+        >
           {error}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        className="rounded bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-40"
-      >
+      <button type="submit" disabled={!canSubmit} className="btn-primary w-full sm:w-auto">
         {submitting ? "Saving…" : "Add expense"}
       </button>
     </form>

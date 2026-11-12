@@ -9,29 +9,43 @@ interface Props {
 
 export default function ExpenseList({ expenses, user, onDelete }: Props) {
   return (
-    <section className="rounded border p-4" aria-label="Expenses">
-      <h2 className="mb-2 text-lg font-semibold">Expenses</h2>
-      {expenses.length === 0 && <p className="text-gray-500">No expenses yet.</p>}
-      <ul className="divide-y">
+    <section className="card" aria-label="Expenses">
+      <h2 className="mb-4 text-xl font-semibold tracking-tight">Expenses</h2>
+      {expenses.length === 0 && (
+        <div className="rounded-2xl bg-sage px-4 py-8 text-center text-mute">
+          No expenses yet. Add the first one above.
+        </div>
+      )}
+      <ul className="divide-y divide-sage">
         {expenses.map((expense) => (
-          <li key={expense.id} className="py-2">
-            <div className="flex justify-between">
-              <span className="font-medium">{expense.description}</span>
-              <span className="tabular-nums">{formatSatang(fromApiString(expense.amount))}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>
-                paid by {expense.paid_by} · split:{" "}
-                {expense.shares
-                  .map((s) => `${s.username} ${formatSatang(fromApiString(s.share))}`)
-                  .join(", ")}
+          <li key={expense.id} className="py-4 first:pt-0 last:pb-0">
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="font-semibold">{expense.description}</span>
+              <span className="text-lg font-bold tabular-nums">
+                {formatSatang(fromApiString(expense.amount))}
               </span>
-              {expense.paid_by === user && (
-                <button className="text-red-600 underline" onClick={() => onDelete(expense)}>
-                  Delete
-                </button>
-              )}
             </div>
+            <p className="mt-1 text-sm text-mute">
+              Paid by <span className="font-medium capitalize text-body">{expense.paid_by}</span>
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {expense.shares.map((s) => (
+                <span
+                  key={s.username}
+                  className="rounded-full bg-sage px-3 py-1 text-xs font-medium capitalize text-body"
+                >
+                  {s.username} {formatSatang(fromApiString(s.share))}
+                </span>
+              ))}
+            </div>
+            {expense.paid_by === user && (
+              <button
+                className="mt-2 text-sm font-semibold text-negative underline-offset-2 hover:underline"
+                onClick={() => onDelete(expense)}
+              >
+                Delete
+              </button>
+            )}
           </li>
         ))}
       </ul>

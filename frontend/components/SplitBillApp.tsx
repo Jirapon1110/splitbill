@@ -79,14 +79,17 @@ export default function SplitBillApp() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-6">
-      <h1 className="text-2xl font-bold">SplitBill</h1>
+    <main className="mx-auto max-w-2xl space-y-5 px-4 py-8 sm:py-12">
+      <header className="space-y-1">
+        <h1 className="text-5xl font-black tracking-tight text-ink sm:text-6xl">SplitBill</h1>
+        <p className="text-body">Share costs with your group and see who owes whom.</p>
+      </header>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="card grid gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="text-sm">User</span>
+          <span className="mb-1 block text-sm font-medium text-body">Signed in as</span>
           <select
-            className="mt-1 block rounded border p-2"
+            className="field capitalize"
             value={user}
             onChange={(e) => setUser(e.target.value)}
           >
@@ -96,9 +99,9 @@ export default function SplitBillApp() {
           </select>
         </label>
         <label className="block">
-          <span className="text-sm">Group</span>
+          <span className="mb-1 block text-sm font-medium text-body">Group</span>
           <select
-            className="mt-1 block rounded border p-2"
+            className="field"
             value={groupId ?? ""}
             onChange={(e) => setGroupId(Number(e.target.value))}
             disabled={groups.length === 0}
@@ -113,7 +116,10 @@ export default function SplitBillApp() {
       </div>
 
       {error && (
-        <p className="rounded bg-red-50 p-2 text-sm text-red-700" role="alert">
+        <p
+          className="rounded-2xl border border-negative/30 bg-negative-pale px-4 py-3 text-sm font-medium text-negative"
+          role="alert"
+        >
           {error}
         </p>
       )}
