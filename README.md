@@ -130,7 +130,8 @@ a network failure cannot create a duplicate expense.
 - Usernames are case-insensitive and normalised to lower case.
 - The payer need not be part of the split (a payer who owes nothing is valid).
 - Exact-split shares must each be greater than zero; to exclude a member, leave them out.
-- Equal-split member lists must be non-empty and contain no duplicates.
+- Equal-split member lists must be non-empty and contain no duplicates, and the amount must be
+  large enough that every member's share is at least 0.01 (otherwise 422).
 - A repeated `Idempotency-Key` returns the original expense even if the new body differs; the key
   alone identifies the request. (A production API might return 409 for a mismatched body.)
 - "Reverse chronological" is by creation time, newest first, ties broken by id.

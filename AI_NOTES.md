@@ -29,7 +29,15 @@
 2. **Whitespace-only descriptions passed validation.** `min_length=1` accepted `"   "`, which was
    then stripped and stored as an empty string. *Detected* in the same review pass; fixed by
    validating after stripping, with `test_blank_description_is_rejected` failing before the fix.
-3. **A large shell heredoc silently half-applied.** The model wrote seven source files in one
+3. **An equal split of a tiny amount crashed with a 500.** `0.01` split three ways gives shares of
+   0.01, 0.00 and 0.00; the database `CHECK (share > 0)` constraint rejected the zero shares and the
+   API returned an unformatted 500, breaking the "consistent JSON errors" rule. The unit tests did
+   not cover it. *Detected* by a live probe script that sent about 60 edge-case requests to the
+   running API (a non-JSON 500 body crashed the probe itself). *Corrected* by a failing test first,
+   then a 422 with a clear message in the service, the same rule mirrored in the frontend preview
+   (submit disabled with an explanation), and a catch-all handler so any unexpected error still
+   returns `{"error": {...}}`.
+4. **A large shell heredoc silently half-applied.** The model wrote seven source files in one
    shell command; the shell failed to parse it and only some files existed afterwards. *Detected*
    with `ls` and `wc -l`, which showed missing and present files that did not match what was
    reported. *Corrected* by recreating the missing files individually and confirming each existed
@@ -45,6 +53,9 @@
   committed with a failing check.
 - For bug fixes, wrote the failing test first, then the fix, so the test is proven to detect the
   regression.
+- Ran a live probe against the running API (invalid amounts, bad splits, membership, access,
+  idempotency replays, 16 concurrent requests, delete rules, 60 random equal splits checked to the
+  satang). This is what found item 3.
 - Verified behaviour end to end by hand: the brief's dinner example through the live API produced
   333.34 / 333.33 / 333.33 and balances +666.66 / -333.33 / -333.33 summing to 0.00; alice's
   access to group 2 returned 403; Docker Compose brought up the API and database with one command.
